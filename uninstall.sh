@@ -7,4 +7,4 @@ rm -f /etc/systemd/system/monitor-input-pause.service \
       /usr/local/bin/monitor-input-pause-listener \
       /usr/local/bin/monitor-input
 systemctl daemon-reload
-echo "Removed. To restore the old KDE shortcut, rename the .desktop.disabled file in ~/.local/share/applications back."
+echo "Removed."
