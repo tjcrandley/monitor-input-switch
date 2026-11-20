@@ -3,6 +3,9 @@ Description=Pause/Break toggles monitor input (works on lock screen)
 
 [Service]
 ExecStart=/usr/local/bin/monitor-input-pause-listener
+# ddcutil refuses to start without a cache dir; services get no HOME/XDG vars.
+CacheDirectory=monitor-input
+Environment=XDG_CACHE_HOME=/var/cache/monitor-input
 Restart=always
 RestartSec=2
 
