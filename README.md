@@ -4,7 +4,8 @@ Press **Pause/Break** to flip a monitor between two inputs over DDC/CI — and
 have it keep working on the **lock screen** and login screen.
 
 Built for a Samsung Odyssey G95NC shared between a Linux PC (DisplayPort) and
-an Xbox/KVM (HDMI-1), on KDE Plasma (Wayland).
+an Xbox/KVM (HDMI-1), on KDE Plasma (Wayland) / CachyOS. Tested working from
+the unlocked desktop and from the KDE lock screen (kscreenlocker).
 
 ## Why a daemon?
 
@@ -43,9 +44,14 @@ Pause pressed it runs `monitor-input toggle`.
 sudo ./install.sh
 ```
 
-If a KDE shortcut launcher named `net.local.monitor-input-toggle.desktop`
-exists, the installer renames it to `*.disabled` so one press doesn't toggle
-twice. Remove any other desktop binding of Pause to `monitor-input` yourself.
+Re-running it is safe: it overwrites the installed files and restarts the
+service, so it doubles as the upgrade step after editing anything in the repo.
+
+**Don't also bind Pause in your desktop's shortcut settings**, or one press
+will toggle twice (desktop + daemon) and land back where it started. If a KDE
+launcher named `net.local.monitor-input-toggle.desktop` exists (the
+pre-daemon setup), the installer renames it to `*.disabled`; that file can be
+deleted.
 
 Uninstall with `sudo ./uninstall.sh`.
 
@@ -69,3 +75,26 @@ Re-run `sudo ./install.sh` after edits.
 journalctl -u monitor-input-pause -f      # listener: devices watched, presses
 journalctl -t monitor-input -f            # switch script: current input, ddcutil exit code
 ```
+
+A healthy press looks like:
+
+```
+monitor-input-pause-listener: Pause pressed -> toggle
+monitor-input: toggle: current=sl=0x0f
+monitor-input: switching to xbox (0x05)
+monitor-input: ddcutil exit 0
+```
+
+**`ddcutil exit 1` with "Unable to determine dynamic sleep cache file name"**
+— ddcutil won't start without a cache directory, and systemd services get no
+`HOME` or `XDG_CACHE_HOME`. The unit sets `CacheDirectory=monitor-input` and
+`XDG_CACHE_HOME=/var/cache/monitor-input` for this; keep those lines if you
+edit the unit.
+
+**`current=unknown`** — the `getvcp` read failed (same cache issue above, the
+monitor's DDC/CI is off, or the `--model` string doesn't match
+`ddcutil detect`). The script then defaults to switching to the PC input.
+
+**No "Pause pressed" line** — check the startup lines list your keyboard as
+`watching /dev/input/eventN`. Only devices that advertise `KEY_PAUSE` are
+watched.
