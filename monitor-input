@@ -1,0 +1,20 @@
+#!/bin/sh
+# Switch the Odyssey G95NC input via DDC/CI (VCP 0x60).
+# Usage: monitor-input xbox|pc|toggle
+# Samsung codes: HDMI-1=0x05, HDMI-2=0x06, DP-1=0x0f; HDMI-3 cannot be selected over DDC.
+M="Odyssey G95NC"
+target="$1"
+if [ "$target" = toggle ]; then
+  cur=$(ddcutil --model "$M" getvcp 60 2>/dev/null | grep -o 'sl=0x[0-9a-f]*')
+  # On the PC -> go to the KVM; anything else (or a failed read) -> back to the PC
+  if [ "$cur" = "sl=0x0f" ]; then target=xbox; else target=pc; fi
+  logger -t monitor-input "toggle: current=${cur:-unknown}"
+fi
+case "$target" in
+  xbox) val=0x05 ;;  # HDMI-1 (KVM / Xbox)
+  pc)   val=0x0f ;;  # DisplayPort-1
+  *) echo "usage: $0 xbox|pc|toggle" >&2; exit 2 ;;
+esac
+logger -t monitor-input "switching to $target ($val)"
+ddcutil --model "$M" --noverify setvcp 60 "$val"
+logger -t monitor-input "ddcutil exit $?"

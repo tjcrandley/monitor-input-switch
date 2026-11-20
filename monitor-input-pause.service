@@ -1,0 +1,10 @@
+[Unit]
+Description=Pause/Break toggles monitor input (works on lock screen)
+
+[Service]
+ExecStart=/usr/local/bin/monitor-input-pause-listener
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
